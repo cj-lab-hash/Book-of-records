@@ -9,5 +9,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cj-lab-hash/Book-of-records.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/cj-lab-hash/Book-of-records/issues"
+  },
+  "homepage": "https://github.com/cj-lab-hash/Book-of-records#readme"
 }
