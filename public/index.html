@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Excel Viewer — Full + Filtered</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .controls { margin: 12px 0; }
+    .btn { padding: 6px 10px; margin-right: 6px; cursor: pointer; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    #rawContainer, #filteredContainer { max-height: 70vh; overflow: auto; border: 1px solid #eee; padding: 8px; background: #fff; margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 13px; }
+    th { background: #f4f4f4; text-align: left; position: sticky; top: 0; z-index: 1; }
+    .loading { color: #666; }
+    .highlight-header { background: #e9f5ff; }
+    .summary { margin-top: 8px; font-size: 13px; color: #333; }
+    pre.debug { background:#f7f7f7; padding:8px; border:1px solid #eee; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h2>Excel Viewer — Full Sheet + Filtered TikTok View</h2>
+
+  <form id="uploadForm">
+    <input type="file" name="excelFile" accept=".xlsx,.xls" required />
+    <button type="submit" class="btn">Upload</button>
+  </form>
+
+  <div class="controls">
+    <button id="showRawBtn" class="btn" disabled>Show Full Sheet</button>
+    <button id="showFilteredBtn" class="btn" disabled>Show Filtered View</button>
+  </div>
+
+  <div id="rawContainer" style="display:none;">
+    <h3>Full Sheet (every row and column)</h3>
+    <div id="rawTableWrapper"></div>
+    <div id="debug" class="debug"></div>
+  </div>
+
+  <div id="filteredContainer" style="display:none;">
+    <h3>Filtered TikTok-style View</h3>
+    <div id="filteredTableWrapper"></div>
+    <div id="filteredSummary" class="summary"></div>
+  </div>
+
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    const rawTableWrapper = document.getElementById('rawTableWrapper');
+    const filteredTableWrapper = document.getElementById('filteredTableWrapper');
+    const rawContainer = document.getElementById('rawContainer');
+    const filteredContainer = document.getElementById('filteredContainer');
+    const showRawBtn = document.getElementById('showRawBtn');
+    const showFilteredBtn = document.getElementById('showFilteredBtn');
+    const debug = document.getElementById('debug');
+    const filteredSummary = document.getElementById('filteredSummary');
+
+    let lastRawArrays = null;
+    let lastHeaderRowIndex = null;
+    let lastHeaders = null;
+    let lastRawRows = null;      // array of objects keyed by headers
+    let lastFilteredRows = null; // array of mapped objects
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(uploadForm);
+      showRawBtn.disabled = true;
+      showFilteredBtn.disabled = true;
+      rawTableWrapper.innerHTML = '<p class="loading">Loading full sheet...</p>';
+      filteredTableWrapper.innerHTML = '<p class="loading">Loading filtered view...</p>';
+      debug.innerHTML = '';
+
+      try {
+        const res = await fetch('/upload-excel', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) {
+          rawTableWrapper.innerHTML = `<pre>${data.error || 'Upload failed'}</pre>`;
+          filteredTableWrapper.innerHTML = '';
+          return;
+        }
+
+        // Defensive checks
+        if (!data.rawArrays || !Array.isArray(data.rawArrays)) {
+          rawTableWrapper.innerHTML = '<p>Error: server did not return rawArrays as an array. Check server logs.</p>';
+          filteredTableWrapper.innerHTML = '';
+          return;
+        }
+
+        lastRawArrays = data.rawArrays;
+
+        // Detect header row and build header names + rawRows (objects)
+        const detection = detectHeaderAndBuildRows(lastRawArrays);
+        lastHeaderRowIndex = detection.headerRowIndex;
+        lastHeaders = detection.headers;
+        lastRawRows = detection.rawRows;
+
+        // Build filtered rows using the same mapping logic as backend
+        lastFilteredRows = buildFilteredRowsFromArrays(lastRawArrays, lastHeaderRowIndex, lastHeaders);
+
+        // Render both
+        renderFullSheet(lastRawArrays, lastHeaderRowIndex);
+        renderFilteredTable(lastFilteredRows);
+
+        // Debug info
+        debug.innerHTML = `<pre>sheetName: ${data.sheetName}\nrowCount: ${data.rowCount}\nheaderRowIndex: ${lastHeaderRowIndex}\nheaders: ${JSON.stringify(lastHeaders)}</pre>`;
+
+        // Enable toggles and show default view
+        showRawBtn.disabled = false;
+        showFilteredBtn.disabled = false;
+        showRaw();
+      } catch (err) {
+        console.error(err);
+        rawTableWrapper.innerHTML = `<pre>${err.message}</pre>`;
+        filteredTableWrapper.innerHTML = '';
+      }
+    });
+
+    showRawBtn.addEventListener('click', showRaw);
+    showFilteredBtn.addEventListener('click', showFiltered);
+
+    function showRaw() {
+      rawContainer.style.display = 'block';
+      filteredContainer.style.display = 'none';
+    }
+    function showFiltered() {
+      rawContainer.style.display = 'none';
+      filteredContainer.style.display = 'block';
+    }
+
+    // -------------------------
+    // Header detection + rawRows builder
+    // -------------------------
+    function detectHeaderAndBuildRows(rawArrays) {
+      // Find header row index by scanning for known keywords (case-insensitive)
+      let headerRowIndex = -1;
+      const keywords = ['order/adjustment id', 'total revenue', 'transaction type', 'order id', 'adjustment id'];
+      for (let i = 0; i < rawArrays.length; i++) {
+        const row = rawArrays[i] || [];
+        const rowStr = row.join('|').toLowerCase();
+        if (keywords.some(k => rowStr.includes(k))) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+      if (headerRowIndex === -1) headerRowIndex = 0;
+
+      // Build headers (trim strings)
+      const headerRow = (rawArrays[headerRowIndex] || []).map(h => (h === undefined || h === null) ? '' : String(h).trim());
+
+      // Build rawRows (objects) for rows below headerRowIndex
+      const dataArrays = rawArrays.slice(headerRowIndex + 1);
+      const rawRows = dataArrays.map(row => {
+        const obj = {};
+        for (let c = 0; c < headerRow.length; c++) {
+          const key = headerRow[c] || `Column${c}`;
+          obj[key] = row && row[c] !== undefined ? row[c] : '';
+        }
+        // preserve extra columns beyond header length
+        if (row && row.length > headerRow.length) {
+          for (let c = headerRow.length; c < row.length; c++) {
+            obj[`Column${c}`] = row[c];
+          }
+        }
+        return obj;
+      });
+
+      return { headerRowIndex, headers: headerRow, rawRows };
+    }
+
+    // -------------------------
+    // Filtered mapping (TikTok-style)
+    // -------------------------
+    function buildFilteredRowsFromArrays(rawArrays, headerRowIndex, headers) {
+      // Use headers to find column indexes (case-insensitive)
+      const lowerHeaders = headers.map(h => String(h).toLowerCase());
+      const colIdxParticulars = lowerHeaders.findIndex(cell => cell.includes('order/adjustment id') || cell.includes('order id') || cell.includes('adjustment id'));
+      const colIdxTxType = lowerHeaders.findIndex(cell => cell.includes('transaction type'));
+      const colIdxSettle = lowerHeaders.findIndex(cell => cell.includes('settle amount'));
+      const colIdxRevenue = lowerHeaders.findIndex(cell => cell.includes('total revenue'));
+      const colIdxFees = lowerHeaders.findIndex(cell => cell.includes('total fees'));
+      const colIdxSettledTime = lowerHeaders.findIndex(cell => cell.includes('settled time') || cell.includes('order settled') || cell.includes('settled data'));
+
+      // Fallbacks to standard TikTok columns (A=0, B=1, F=5, G=6, N=13)
+      const idxA = colIdxParticulars !== -1 ? colIdxParticulars : 0;
+      const idxB = colIdxTxType !== -1 ? colIdxTxType : 1;
+      const idxF = colIdxSettle !== -1 ? colIdxSettle : 5;
+      const idxG = colIdxRevenue !== -1 ? colIdxRevenue : 6;
+      const idxN = colIdxFees !== -1 ? colIdxFees : 13;
+      const idxSettledTime = colIdxSettledTime !== -1 ? colIdxSettledTime : 3;
+
+      // Data rows are rows after headerRowIndex
+      const dataArrays = rawArrays.slice(headerRowIndex + 1);
+
+      const safeNum = v => {
+        if (v === undefined || v === null || v === '') return 0;
+        // Remove commas and spaces, handle parentheses for negatives
+        let s = String(v).trim();
+        const isParen = /^\(.*\)$/.test(s);
+        s = s.replace(/[,\s]/g, '').replace(/[()]/g, '');
+        const n = Number(s);
+        if (!Number.isFinite(n)) return 0;
+        return isParen ? -Math.abs(n) : n;
+      };
+
+      const filteredRows = dataArrays
+        .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
+        .map(row => {
+          const transactionType = String(row[idxB] || '').trim().toLowerCase();
+          const isWithholding = transactionType.includes('withholding');
+
+          return {
+            particulars: String(row[idxA] || 'N/A').trim(),
+            salesInvoice: '',
+            grossSales: safeNum(row[idxG]),
+            withholdingTax: isWithholding ? safeNum(row[idxF]) : 0,
+            totalPlatformFee: safeNum(row[idxN]),
+            cash: safeNum(row[idxF]),
+            orderSettledTime:formatDateTime(row[colIdxSettledTime]) || ''
+          };
+        });
+
+      return filteredRows;
+    }
+
+    // -------------------------
+    // Renderers
+    // -------------------------
+    function renderFullSheet(rows, headerRowIndex = null) {
+      rawTableWrapper.innerHTML = '';
+      if (!rows || !rows.length) {
+        rawTableWrapper.innerHTML = '<p>No data found.</p>';
+        return;
+      }
+
+      // Normalize rows to arrays
+      const normalized = rows.map(r => Array.isArray(r) ? r : Object.values(r));
+
+      // Determine max columns across all rows
+      const maxCols = Math.max(...normalized.map(r => r ? r.length : 0));
+
+      const table = document.createElement('table');
+
+      // Column header (Col 1, Col 2, ...)
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      for (let c = 0; c < maxCols; c++) {
+        const th = document.createElement('th');
+        th.textContent = `Col ${c + 1}`;
+        trh.appendChild(th);
+      }
+      thead.appendChild(trh);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      normalized.forEach((rowArr, rowIndex) => {
+        const tr = document.createElement('tr');
+
+        // Highlight detected header row visually
+        if (headerRowIndex !== null && rowIndex === headerRowIndex) {
+          tr.classList.add('highlight-header');
+        }
+
+        for (let c = 0; c < maxCols; c++) {
+          const td = document.createElement('td');
+          const val = (rowArr && rowArr[c] !== undefined && rowArr[c] !== null) ? rowArr[c] : '';
+          td.textContent = val;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      rawTableWrapper.appendChild(table);
+    }
+
+    function renderFilteredTable(rows) {
+      filteredTableWrapper.innerHTML = '';
+      filteredSummary.innerHTML = '';
+
+      if (!rows || !rows.length) {
+        filteredTableWrapper.innerHTML = '<p>No filtered rows found.</p>';
+        return;
+      }
+
+      const keys = Object.keys(rows[0]);
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      keys.forEach(k => {
+        const th = document.createElement('th');
+        th.textContent = k;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        keys.forEach(k => {
+          const td = document.createElement('td');
+          td.textContent = row[k];
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      filteredTableWrapper.appendChild(table);
+
+      // Summary totals
+      const totals = rows.reduce((acc, r) => {
+        acc.grossSales += Number(r.grossSales || 0);
+        acc.withholdingTax += Number(r.withholdingTax || 0);
+        acc.totalPlatformFee += Number(r.totalPlatformFee || 0);
+        acc.cash += Number(r.cash || 0);
+        return acc;
+      }, { grossSales: 0, withholdingTax: 0, totalPlatformFee: 0, cash: 0 });
+
+      filteredSummary.innerHTML = `
+        <strong>Filtered summary</strong>
+        &nbsp;•&nbsp; Rows: ${rows.length}
+        &nbsp;•&nbsp; Gross Sales: ${formatNumber(totals.grossSales)}
+        &nbsp;•&nbsp; Withholding Tax: ${formatNumber(totals.withholdingTax)}
+        &nbsp;•&nbsp; Platform Fee: ${formatNumber(totals.totalPlatformFee)}
+        &nbsp;•&nbsp; Cash: ${formatNumber(totals.cash)}
+      `;
+    }
+
+    // -------------------------
+    // Helpers
+    // -------------------------
+    function formatNumber(n) {
+      if (n === null || n === undefined) return '0';
+      return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+    function formatDateTime(v) {
+      if (!v) return '';
+      const d = new Date(v);
+      if (isNaN(d)) return v;
+      return d.toLocaleString();
+    }
+  </script>
+</body>
+</html>
