@@ -219,12 +219,12 @@
 
           return {
             Order_ID: String(row[idxA] || 'N/A').trim(),
-            sales_Invoice: '',
-            gross_Sales: safeNum(row[idxG]),
-            withholding_Tax: isWithholding ? safeNum(row[idxF]) : 0,
-            total_Platform_Fee: safeNum(row[idxN]),
-            cash: safeNum(row[idxF]),
-            order_Settled_Time:formatDateTime(row[colIdxSettledTime]) || ''
+            Sales_Invoice: '',
+            Gross_Sales: safeNum(row[idxG]),
+            Withholding_Tax: isWithholding ? safeNum(row[idxF]) : 0,
+            Total_Platform_Fee: safeNum(row[idxN]),
+            Cash: safeNum(row[idxF]),
+            Order_Settled_Time:formatDateTime(row[colIdxSettledTime]) || ''
           };
         });
 
