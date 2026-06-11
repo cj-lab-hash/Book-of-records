@@ -99,7 +99,16 @@
 
         // Render both
         renderFullSheet(lastRawArrays, lastHeaderRowIndex);
+        // renderFilteredTable(lastFilteredRows);
+        
+        lastFilteredRows.sort((a, b) => {
+          const d1 = new Date(a.orderSettledTime);
+          const d2 = new Date(b.orderSettledTime);
+          return d2 - d1; // newest first
+        });
+
         renderFilteredTable(lastFilteredRows);
+
 
         // Debug info
         debug.innerHTML = `<pre>sheetName: ${data.sheetName}\nrowCount: ${data.rowCount}\nheaderRowIndex: ${lastHeaderRowIndex}\nheaders: ${JSON.stringify(lastHeaders)}</pre>`;
