@@ -182,7 +182,7 @@
     function buildFilteredRowsFromArrays(rawArrays, headerRowIndex, headers) {
       // Use headers to find column indexes (case-insensitive)
       const lowerHeaders = headers.map(h => String(h).toLowerCase());
-      const colIdxParticulars = lowerHeaders.findIndex(cell => cell.includes('order/adjustment id') || cell.includes('order id') || cell.includes('adjustment id'));
+      const colIdxOrderID = lowerHeaders.findIndex(cell => cell.includes('order/adjustment id') || cell.includes('order id') || cell.includes('adjustment id'));
       const colIdxTxType = lowerHeaders.findIndex(cell => cell.includes('transaction type'));
       const colIdxSettle = lowerHeaders.findIndex(cell => cell.includes('settle amount'));
       const colIdxRevenue = lowerHeaders.findIndex(cell => cell.includes('total revenue'));
@@ -190,7 +190,7 @@
       const colIdxSettledTime = lowerHeaders.findIndex(cell => cell.includes('settled time') || cell.includes('order settled') || cell.includes('settled data'));
 
       // Fallbacks to standard TikTok columns (A=0, B=1, F=5, G=6, N=13)
-      const idxA = colIdxParticulars !== -1 ? colIdxParticulars : 0;
+      const idxA = colIdxOrderID !== -1 ? colIdxOrderID : 0;
       const idxB = colIdxTxType !== -1 ? colIdxTxType : 1;
       const idxF = colIdxSettle !== -1 ? colIdxSettle : 5;
       const idxG = colIdxRevenue !== -1 ? colIdxRevenue : 6;
@@ -218,13 +218,13 @@
           const isWithholding = transactionType.includes('withholding');
 
           return {
-            particulars: String(row[idxA] || 'N/A').trim(),
-            salesInvoice: '',
-            grossSales: safeNum(row[idxG]),
-            withholdingTax: isWithholding ? safeNum(row[idxF]) : 0,
-            totalPlatformFee: safeNum(row[idxN]),
+            Order_ID: String(row[idxA] || 'N/A').trim(),
+            sales_Invoice: '',
+            gross_Sales: safeNum(row[idxG]),
+            withholding_Tax: isWithholding ? safeNum(row[idxF]) : 0,
+            total_Platform_Fee: safeNum(row[idxN]),
             cash: safeNum(row[idxF]),
-            orderSettledTime:formatDateTime(row[colIdxSettledTime]) || ''
+            order_Settled_Time:formatDateTime(row[colIdxSettledTime]) || ''
           };
         });
 
