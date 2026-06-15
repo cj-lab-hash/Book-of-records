@@ -43,6 +43,11 @@
     <div id="filteredTableWrapper"></div>
     <div id="filteredSummary" class="summary"></div>
   </div>
+  
+  <div id="particularsContainer" style="display:none;">
+    <h3>Particulars View (Grouped)</h3>
+    <div id="particularsTableWrapper"></div>
+  </div>
 
   <script>
     const uploadForm = document.getElementById('uploadForm');
@@ -55,6 +60,8 @@
     const debug = document.getElementById('debug');
     const filteredSummary = document.getElementById('filteredSummary');
     const showParticularsBtn = document.getElementById('showParticularsBtn');
+    const particularsContainer = document.getElementById('particularsContainer');
+    const particularsTableWrapper = document.getElementById('particularsTableWrapper');
 
 
     let lastRawArrays = null;
@@ -63,12 +70,14 @@
     let lastRawRows = null;      // array of objects keyed by headers
     let lastFilteredRows = null; // array of mapped objects
 
+    
+
     uploadForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(uploadForm);
       showRawBtn.disabled = true;
       showFilteredBtn.disabled = true;
-      showParticularsBtn.disabled = false;
+      showParticularsBtn.disabled = true;
       rawTableWrapper.innerHTML = '<p class="loading">Loading full sheet...</p>';
       filteredTableWrapper.innerHTML = '<p class="loading">Loading filtered view...</p>';
       debug.innerHTML = '';
@@ -89,7 +98,10 @@
           filteredTableWrapper.innerHTML = '';
           return;
         }
-
+        if (!groups || groups.length === 0) {
+          container.innerHTML = "<p>No grouped data found.</p>";
+          return;
+        }
         lastRawArrays = data.rawArrays;
 
         // Detect header row and build header names + rawRows (objects)
@@ -112,8 +124,8 @@
         });
 
         renderFilteredTable(lastFilteredRows);
-        const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
-        renderParticularsView(grouped);
+        // const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
+        // renderParticularsView(grouped);
 
         // Debug info
         debug.innerHTML = `<pre>sheetName: ${data.sheetName}\nrowCount: ${data.rowCount}\nheaderRowIndex: ${lastHeaderRowIndex}\nheaders: ${JSON.stringify(lastHeaders)}</pre>`;
@@ -121,6 +133,7 @@
         // Enable toggles and show default view
         showRawBtn.disabled = false;
         showFilteredBtn.disabled = false;
+        showParticularsBtn.disabled = false
         showRaw();
       } catch (err) {
         console.error(err);
@@ -132,17 +145,30 @@
     showRawBtn.addEventListener('click', showRaw);
     showFilteredBtn.addEventListener('click', showFiltered);
     
+    
     showParticularsBtn.addEventListener('click', () => {
-      renderParticularsView(groupByDateGrossLimit(lastFilteredRows, 500));
+
+      if (!lastFilteredRows) return;
+
+      
+      // const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
+      renderParticularsView(grouped);
+
+      rawContainer.style.display = 'none';
+      filteredContainer.style.display = 'none';
+      particularsContainer.style.display = 'block';
     });
+
 
     function showRaw() {
       rawContainer.style.display = 'block';
       filteredContainer.style.display = 'none';
+      particularsContainer.style.display = 'none';
     }
     function showFiltered() {
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'block';
+      particularsContainer.style.display = 'none';
     }
 
 
@@ -304,6 +330,7 @@
     //GROUPING
     //--------------------------
     function groupByDateGrossLimit(rows, limit = 500) {
+      if (!rows || !Array.isArray(rows)) return [];
   const result = {};
 
   // Group by date
@@ -447,7 +474,8 @@
     //-----------------------------
     
 function renderParticularsView(groups) {
-  const container = document.getElementById('filteredTableWrapper');
+  // const container = document.getElementById('filteredTableWrapper');
+  const container = particularsTableWrapper;
   container.innerHTML = '';
 
   groups.forEach((group, index) => {
@@ -499,9 +527,10 @@ function renderParticularsView(groups) {
 
       tr.innerHTML = `
         <td>${orderId}</td>
-        <td>${gross}</td>
-        <td>${cash}</td>
-        <td>${platform}</td>
+        <td>${formatNumber(gross)}</td>
+        <td>${formatNumber(cash)}</td>
+        <td>${formatNumber(platform)}</td>
+
       `;
 
       tbody.appendChild(tr);
