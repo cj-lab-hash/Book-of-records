@@ -415,6 +415,7 @@ function renderParticularsView(groups) {
       const orderId = r.Order_ID || '';
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
+      const withholding = Number(r.withholdingTax || 0);
 
       totalGross += gross;
 
@@ -422,6 +423,7 @@ function renderParticularsView(groups) {
         <td>${orderId}</td>
         <td>${gross}</td>
         <td>${cash}</td>
+        <td>${withholding}</td>
       `;
 
       tbody.appendChild(tr);
