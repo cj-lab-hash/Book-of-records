@@ -102,9 +102,9 @@
        
         
         lastFilteredRows.sort((a, b) => {
-          const d1 = new Date(a.orderSettledTime);
-          const d2 = new Date(b.orderSettledTime);
-          return d2 - d1; // newest first
+          const d1 = new Date(a.Order_Settled_Time);
+          const d2 = new Date(b.Order_Settled_Time);
+          return d2 - d1;
         });
 
         // renderFilteredTable(lastFilteredRows);
@@ -136,6 +136,49 @@
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'block';
     }
+
+
+    function detectHeaderAndBuildRows(rawArrays) {
+  let headerRowIndex = -1;
+
+  const keywords = [
+    'order/adjustment id',
+    'total revenue',
+    'transaction type',
+    'order id',
+    'adjustment id'
+  ];
+
+  for (let i = 0; i < rawArrays.length; i++) {
+    const row = rawArrays[i] || [];
+    const rowStr = row.join('|').toLowerCase();
+
+    if (keywords.some(k => rowStr.includes(k))) {
+      headerRowIndex = i;
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1) headerRowIndex = 0;
+
+  const headerRow = (rawArrays[headerRowIndex] || []).map(h =>
+    h ? String(h).trim() : ''
+  );
+
+  const dataArrays = rawArrays.slice(headerRowIndex + 1);
+
+  const rawRows = dataArrays.map(row => {
+    const obj = {};
+
+    headerRow.forEach((h, i) => {
+      obj[h || `Column${i}`] = row?.[i] ?? '';
+    });
+
+    return obj;
+  });
+
+  return { headerRowIndex, headers: headerRow, rawRows };
+}
 
     // -------------------------
     // Header detection + rawRows builder
@@ -426,7 +469,7 @@ function renderParticularsView(groups) {
       const orderId = r.Order_ID || '';
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
-      const withholding = Number(r.withholdingTax || 0);
+      const withholding = Number(r.Withholding_Tax || 0);
       
       totalGross += gross;
       totalCash += cash;
@@ -447,8 +490,8 @@ function renderParticularsView(groups) {
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
       <td><strong>${totalGross}</strong></td>
-      <td><strong>${totalCash}</td>
-      <td style="color:red">${totalWithholding}</td>
+      <td><strong>${totalCash}</strong></td>
+      <td style="color:red"><strong>${totalWithholding}</strong></td>
     `;
     tbody.appendChild(totalRow);
 
