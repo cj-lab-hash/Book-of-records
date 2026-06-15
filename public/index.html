@@ -99,7 +99,7 @@
 
         // Render both
         renderFullSheet(lastRawArrays, lastHeaderRowIndex);
-        // renderFilteredTable(lastFilteredRows);
+       
         
         lastFilteredRows.sort((a, b) => {
           const d1 = new Date(a.orderSettledTime);
@@ -107,8 +107,9 @@
           return d2 - d1; // newest first
         });
 
-        renderFilteredTable(lastFilteredRows);
-
+        // renderFilteredTable(lastFilteredRows);
+        const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
+        renderParticularsView(grouped);
 
         // Debug info
         debug.innerHTML = `<pre>sheetName: ${data.sheetName}\nrowCount: ${data.rowCount}\nheaderRowIndex: ${lastHeaderRowIndex}\nheaders: ${JSON.stringify(lastHeaders)}</pre>`;
@@ -230,7 +231,45 @@
 
       return filteredRows;
     }
+      //--------------------------
+    //GROUPING
+    //--------------------------
+    function groupByDateGrossLimit(rows, limit = 500) {
+  const result = {};
 
+  // Group by date
+  rows.forEach(r => {
+    const date = r.orderSettledTime || 'No Date';
+    if (!result[date]) result[date] = [];
+    result[date].push(r);
+  });
+
+  const finalGroups = [];
+
+  Object.keys(result).forEach(date => {
+    let batch = [];
+    let total = 0;
+
+    result[date].forEach(r => {
+      const value = Number(r.grossSales || 0);
+
+      if (total + value > limit && batch.length > 0) {
+        finalGroups.push({ date, rows: batch });
+        batch = [];
+        total = 0;
+      }
+
+      batch.push(r);
+      total += value;
+    });
+
+    if (batch.length > 0) {
+      finalGroups.push({ date, rows: batch });
+    }
+  });
+
+  return finalGroups;
+}
     // -------------------------
     // Renderers
     // -------------------------
@@ -334,7 +373,66 @@
         &nbsp;•&nbsp; Cash: ${formatNumber(totals.cash)}
       `;
     }
+    //-----------------------------
+    //RENDER FOR GROUPING
+    //-----------------------------
+    function renderParticularsView(groups) {
+  const container = document.getElementById('filteredTableWrapper');
+  container.innerHTML = '';
 
+  groups.forEach((group, index) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.marginBottom = '20px';
+
+    const title = document.createElement('h4');
+    title.textContent = `Date: ${group.date} | Group ${index + 1}`;
+    wrapper.appendChild(title);
+
+    const table = document.createElement('table');
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Order ID</th>
+        <th>Gross Sales</th>
+        <th>Cash</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    let totalGross = 0;
+
+    group.rows.forEach(r => {
+      const tr = document.createElement('tr');
+
+      totalGross += Number(r.grossSales || 0);
+
+      tr.innerHTML = `
+        <td>${r.particulars}</td>
+        <td>${r.grossSales}</td>
+        <td>${r.cash}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    // ✅ Add total row
+    const totalRow = document.createElement('tr');
+    totalRow.innerHTML = `
+      <td><strong>Total</strong></td>
+      <td><strong>${totalGross}</strong></td>
+      <td></td>
+    `;
+    tbody.appendChild(totalRow);
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+  });
+}
+  
     // -------------------------
     // Helpers
     // -------------------------
