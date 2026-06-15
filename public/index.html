@@ -469,7 +469,7 @@ function renderParticularsView(groups) {
 
     let totalGross = 0;
     let totalCash = 0;
-    let totalWithholding = 0;
+    // let totalWithholding = 0;
 
     // ✅ IMPORTANT: loop correctly
     (group.rows || []).forEach(r => {
@@ -479,17 +479,17 @@ function renderParticularsView(groups) {
       const orderId = r.Order_ID || '';
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
-      const withholding = Number(r.Withholding_Tax || 0);
+      // const withholding = Number(r.Withholding_Tax || 0);
       
       totalGross += gross;
       totalCash += cash;
-      totalWithholding += withholding;
+      // totalWithholding += withholding;
 
       tr.innerHTML = `
         <td>${orderId}</td>
         <td>${gross}</td>
         <td>${cash}</td>
-        <td>${withholding}</td>
+        
       `;
 
       tbody.appendChild(tr);
@@ -501,7 +501,7 @@ function renderParticularsView(groups) {
       <td><strong>Total</strong></td>
       <td><strong>${totalGross.toFixed(2)}</strong></td>
       <td><strong>${totalCash.toFixed(2)}</strong></td>
-      <td style="color:red"><strong>${totalWithholding.toFixed(2)}</strong></td>
+      
     `;
     tbody.appendChild(totalRow);
 
