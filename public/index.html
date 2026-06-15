@@ -227,8 +227,8 @@
 
       const gross = safeNum(row[idxG]);
       const cash = safeNum(row[idxF]);
-      const hasValue = gross !== 0 || cash !== 0;
-
+      // const hasValue = gross !== 0 || cash !== 0;
+      const hasValue = gross !== 0;
       return String(row[idxA]).trim() !== '' && hasValue;
     })
 
@@ -460,6 +460,7 @@ function renderParticularsView(groups) {
         <th>Order ID</th>
         <th>Gross Sales</th>
         <th>Cash</th>
+        <th>Total Platform Fee</th>
         
       </tr>
     `;
@@ -470,6 +471,7 @@ function renderParticularsView(groups) {
     let totalGross = 0;
     let totalCash = 0;
     // let totalWithholding = 0;
+    let totalPlatformFee = 0;
 
     // ✅ IMPORTANT: loop correctly
     (group.rows || []).forEach(r => {
@@ -480,16 +482,18 @@ function renderParticularsView(groups) {
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
       // const withholding = Number(r.Withholding_Tax || 0);
+      const platform = Number(r.totalPlatformFee || 0);
       
       totalGross += gross;
       totalCash += cash;
       // totalWithholding += withholding;
+      totalPlatformFee += platform;
 
       tr.innerHTML = `
         <td>${orderId}</td>
         <td>${gross}</td>
         <td>${cash}</td>
-        
+        <td>${platform}</td>
       `;
 
       tbody.appendChild(tr);
@@ -501,7 +505,7 @@ function renderParticularsView(groups) {
       <td><strong>Total</strong></td>
       <td><strong>${totalGross.toFixed(2)}</strong></td>
       <td><strong>${totalCash.toFixed(2)}</strong></td>
-      
+      <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
     `;
     tbody.appendChild(totalRow);
 
