@@ -291,39 +291,8 @@
   return filteredRows;
 }
 
-//     // -------------------------
-//     // Filtered mapping (TikTok-style)
-//     // -------------------------
-//     const filteredRows = dataArrays
-//   .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
-//   .map(row => {
-//     const transactionType = String(row[idxB] || '').trim().toLowerCase();
-//     const isWithholding = transactionType.includes('withholding');
 
-//     let grossSales = safeNum(row[idxG]);
-//     let cashVal = safeNum(row[idxF]);
-//     let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
-
-//     // ✅ KEY LOGIC: MOVE NEGATIVE CASH → WITHHOLDING (KEEP SIGN)
-//     if (cashVal < 0) {
-//       withholdingVal += cashVal; // keep negative (e.g. -27.27)
-//       cashVal = 0;
-//     }
-
-//     return {
-//       Order_ID: String(row[idxA] || 'N/A').trim(),
-//       Sales_Invoice: '',
-//       Gross_Sales: grossSales,
-//       Withholding_Tax: withholdingVal,
-//       Total_Platform_Fee: safeNum(row[idxN]),
-//       Cash: cashVal,
-//       Order_Settled_Time: formatDateTime(row[idxSettledTime]) || ''
-//     };
-//   });
-
-// return filteredRows;
-
-      //--------------------------
+    //--------------------------
     //GROUPING
     //--------------------------
     function groupByDateGrossLimit(rows, limit = 500) {
@@ -498,6 +467,7 @@ function renderParticularsView(groups) {
         <th>Gross Sales</th>
         <th>Cash</th>
         <th>Total Platform Fee</th>
+        <th>WithHolding Tax</th>
         
       </tr>
     `;
@@ -507,7 +477,7 @@ function renderParticularsView(groups) {
 
     let totalGross = 0;
     let totalCash = 0;
-    // let totalWithholding = 0;
+    let totalWithholding = 0;
     let totalPlatformFee = 0;
 
     // ✅ IMPORTANT: loop correctly
@@ -518,12 +488,12 @@ function renderParticularsView(groups) {
       const orderId = r.Order_ID || '';
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
-      // const withholding = Number(r.Withholding_Tax || 0);
+      const withholding = Number(r.Withholding_Tax || 0);
       const platform = Number(r.Total_Platform_Fee || 0);
       
       totalGross += gross;
       totalCash += cash;
-      // totalWithholding += withholding;
+      totalWithholding += withholding;
       totalPlatformFee += platform;
 
       tr.innerHTML = `
@@ -531,6 +501,7 @@ function renderParticularsView(groups) {
         <td>${formatNumber(gross)}</td>
         <td>${formatNumber(cash)}</td>
         <td>${formatNumber(platform)}</td>
+        <td>${formatNumber(withholding)}</td>
 
       `;
 
@@ -544,6 +515,7 @@ function renderParticularsView(groups) {
       <td><strong>${totalGross.toFixed(2)}</strong></td>
       <td><strong>${totalCash.toFixed(2)}</strong></td>
       <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
+      <td><strong>${totalWithholding.toFixed(2)}</strong></td>
     `;
     tbody.appendChild(totalRow);
 
