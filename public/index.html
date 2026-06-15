@@ -225,7 +225,7 @@
             Withholding_Tax: isWithholding ? safeNum(row[idxF]) : 0,
             Total_Platform_Fee: safeNum(row[idxN]),
             Cash: safeNum(row[idxF]),
-            Order_Settled_Time:formatDateTime(row[colIdxSettledTime]) || ''
+            Order_Settled_Time: formatDateTime(row[idxSettledTime]) || ''
           };
         });
 
@@ -239,7 +239,7 @@
 
   // Group by date
   rows.forEach(r => {
-    const date = r.orderSettledTime || 'No Date';
+    const date = r.Order_Settled_Time || 'No Date';
     if (!result[date]) result[date] = [];
     result[date].push(r);
   });
@@ -251,7 +251,7 @@
     let total = 0;
 
     result[date].forEach(r => {
-      const value = Number(r.grossSales || 0);
+      const value = Number(r.Gross_Sales || 0);
 
       if (total + value > limit && batch.length > 0) {
         finalGroups.push({ date, rows: batch });
@@ -376,14 +376,17 @@
     //-----------------------------
     //RENDER FOR GROUPING
     //-----------------------------
-    function renderParticularsView(groups) {
+    
+function renderParticularsView(groups) {
   const container = document.getElementById('filteredTableWrapper');
   container.innerHTML = '';
 
   groups.forEach((group, index) => {
+
     const wrapper = document.createElement('div');
     wrapper.style.marginBottom = '20px';
 
+    // ✅ FIXED date display
     const title = document.createElement('h4');
     title.textContent = `Date: ${group.date} | Group ${index + 1}`;
     wrapper.appendChild(title);
@@ -404,21 +407,27 @@
 
     let totalGross = 0;
 
-    group.rows.forEach(r => {
+    // ✅ IMPORTANT: loop correctly
+    (group.rows || []).forEach(r => {
+
       const tr = document.createElement('tr');
 
-      totalGross += Number(r.grossSales || 0);
+      const orderId = r.Order_ID || '';
+      const gross = Number(r.Gross_Sales || 0);
+      const cash = Number(r.Cash || 0);
+
+      totalGross += gross;
 
       tr.innerHTML = `
-        <td>${r.particulars}</td>
-        <td>${r.grossSales}</td>
-        <td>${r.cash}</td>
+        <td>${orderId}</td>
+        <td>${gross}</td>
+        <td>${cash}</td>
       `;
 
       tbody.appendChild(tr);
     });
 
-    // ✅ Add total row
+    // ✅ TOTAL ROW
     const totalRow = document.createElement('tr');
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
@@ -432,6 +441,7 @@
     container.appendChild(wrapper);
   });
 }
+
   
     // -------------------------
     // Helpers
