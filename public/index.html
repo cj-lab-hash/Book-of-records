@@ -99,10 +99,7 @@
           return;
         }
         
-        if (!groups || groups.length === 0) {
-          container.innerHTML = "<p>No grouped data found.</p>";
-          return;
-        }
+        
 
         lastRawArrays = data.rawArrays;
 
@@ -151,9 +148,7 @@
     showParticularsBtn.addEventListener('click', () => {
 
       if (!lastFilteredRows) return;
-
-      
-      // const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
+      const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
       renderParticularsView(grouped);
 
       rawContainer.style.display = 'none';
@@ -479,7 +474,11 @@ function renderParticularsView(groups) {
   // const container = document.getElementById('filteredTableWrapper');
   const container = particularsTableWrapper;
   container.innerHTML = '';
-
+  
+    if (!groups || groups.length === 0) {
+      container.innerHTML = "<p>No grouped data found.</p>";
+    return;
+    }
   groups.forEach((group, index) => {
 
     const wrapper = document.createElement('div');
