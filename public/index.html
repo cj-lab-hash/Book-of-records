@@ -98,10 +98,12 @@
           filteredTableWrapper.innerHTML = '';
           return;
         }
+        
         if (!groups || groups.length === 0) {
           container.innerHTML = "<p>No grouped data found.</p>";
           return;
         }
+
         lastRawArrays = data.rawArrays;
 
         // Detect header row and build header names + rawRows (objects)
