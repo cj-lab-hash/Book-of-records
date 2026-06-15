@@ -501,7 +501,7 @@ function renderParticularsView(groups) {
         <td>${formatNumber(gross)}</td>
         <td>${formatNumber(cash)}</td>
         <td>${formatNumber(platform)}</td>
-        <td>${formatNumber(withholding)}</td>
+        <td style="color:red">${formatNumber(withholding)}</td>
 
       `;
 
@@ -510,10 +510,15 @@ function renderParticularsView(groups) {
 
     // ✅ TOTAL ROW
     const totalRow = document.createElement('tr');
+    const adjustedCash = totalCash + totalWithholding;
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
       <td><strong>${totalGross.toFixed(2)}</strong></td>
-      <td><strong>${totalCash.toFixed(2)}</strong></td>
+      <td style="coloer:red">
+          <strong>${adjustedCash.toFixed(2)}</strong>
+          <br>
+          <small>(Cash: ${totalCash.toFixed(2)}, WHT: ${totalWithholding.toFixed(2)})</small>
+          </td>
       <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
       <td><strong>${totalWithholding.toFixed(2)}</strong></td>
     `;
