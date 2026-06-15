@@ -489,9 +489,9 @@ function renderParticularsView(groups) {
     const totalRow = document.createElement('tr');
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
-      <td><strong>${totalGross}</strong></td>
-      <td><strong>${totalCash}</strong></td>
-      <td style="color:red"><strong>${totalWithholding}</strong></td>
+      <td><strong>${totalGross.toFixed(2)}</strong></td>
+      <td><strong>${totalCash.toFixed(2)}</strong></td>
+      <td style="color:red"><strong>${totalWithholding.toFixed(2)}</strong></td>
     `;
     tbody.appendChild(totalRow);
 
@@ -507,7 +507,10 @@ function renderParticularsView(groups) {
     // -------------------------
     function formatNumber(n) {
       if (n === null || n === undefined) return '0';
-      return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+      return Number(n).toLocaleString(undefined, { 
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2 
+      });
     }
     function formatDateTime(v) {
       if (!v) return '';
