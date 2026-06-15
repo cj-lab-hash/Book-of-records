@@ -140,42 +140,72 @@
     // -------------------------
     // Header detection + rawRows builder
     // -------------------------
-    function detectHeaderAndBuildRows(rawArrays) {
-      // Find header row index by scanning for known keywords (case-insensitive)
-      let headerRowIndex = -1;
-      const keywords = ['order/adjustment id', 'total revenue', 'transaction type', 'order id', 'adjustment id'];
-      for (let i = 0; i < rawArrays.length; i++) {
-        const row = rawArrays[i] || [];
-        const rowStr = row.join('|').toLowerCase();
-        if (keywords.some(k => rowStr.includes(k))) {
-          headerRowIndex = i;
-          break;
-        }
+    function buildFilteredRowsFromArrays(rawArrays, headerRowIndex, headers) {
+
+  const lowerHeaders = headers.map(h => String(h).toLowerCase());
+
+  const colIdxOrderID = lowerHeaders.findIndex(cell =>
+    cell.includes('order/adjustment id') ||
+    cell.includes('order id') ||
+    cell.includes('adjustment id')
+  );
+
+  const colIdxTxType = lowerHeaders.findIndex(cell => cell.includes('transaction type'));
+  const colIdxSettle = lowerHeaders.findIndex(cell => cell.includes('settle amount'));
+  const colIdxRevenue = lowerHeaders.findIndex(cell => cell.includes('total revenue'));
+  const colIdxFees = lowerHeaders.findIndex(cell => cell.includes('total fees'));
+  const colIdxSettledTime = lowerHeaders.findIndex(cell =>
+    cell.includes('settled time') || cell.includes('order settled')
+  );
+
+  const idxA = colIdxOrderID !== -1 ? colIdxOrderID : 0;
+  const idxB = colIdxTxType !== -1 ? colIdxTxType : 1;
+  const idxF = colIdxSettle !== -1 ? colIdxSettle : 5;
+  const idxG = colIdxRevenue !== -1 ? colIdxRevenue : 6;
+  const idxN = colIdxFees !== -1 ? colIdxFees : 13;
+  const idxSettledTime = colIdxSettledTime !== -1 ? colIdxSettledTime : 3;
+
+  const dataArrays = rawArrays.slice(headerRowIndex + 1);
+
+  const safeNum = v => {
+    if (!v) return 0;
+    let s = String(v).trim();
+    const isParen = /^\(.*\)$/.test(s);
+    s = s.replace(/[,\s]/g, '').replace(/[()]/g, '');
+    const n = Number(s);
+    if (!Number.isFinite(n)) return 0;
+    return isParen ? -Math.abs(n) : n;
+  };
+
+  const filteredRows = dataArrays
+    .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
+    .map(row => {
+
+      const transactionType = String(row[idxB] || '').trim().toLowerCase();
+      const isWithholding = transactionType.includes('withholding');
+
+      let grossSales = safeNum(row[idxG]);
+      let cashVal = safeNum(row[idxF]);
+      let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
+
+      // ✅ Move negative cash → withholding
+      if (cashVal < 0) {
+        withholdingVal += cashVal;
+        cashVal = 0;
       }
-      if (headerRowIndex === -1) headerRowIndex = 0;
 
-      // Build headers (trim strings)
-      const headerRow = (rawArrays[headerRowIndex] || []).map(h => (h === undefined || h === null) ? '' : String(h).trim());
+      return {
+        Order_ID: String(row[idxA] || 'N/A').trim(),
+        Gross_Sales: grossSales,
+        Withholding_Tax: withholdingVal,
+        Total_Platform_Fee: safeNum(row[idxN]),
+        Cash: cashVal,
+        Order_Settled_Time: formatDateTime(row[idxSettledTime]) || ''
+      };
+    });
 
-      // Build rawRows (objects) for rows below headerRowIndex
-      const dataArrays = rawArrays.slice(headerRowIndex + 1);
-      const rawRows = dataArrays.map(row => {
-        const obj = {};
-        for (let c = 0; c < headerRow.length; c++) {
-          const key = headerRow[c] || `Column${c}`;
-          obj[key] = row && row[c] !== undefined ? row[c] : '';
-        }
-        // preserve extra columns beyond header length
-        if (row && row.length > headerRow.length) {
-          for (let c = headerRow.length; c < row.length; c++) {
-            obj[`Column${c}`] = row[c];
-          }
-        }
-        return obj;
-      });
-
-      return { headerRowIndex, headers: headerRow, rawRows };
-    }
+  return filteredRows;
+}
 
     // -------------------------
     // Filtered mapping (TikTok-style)
