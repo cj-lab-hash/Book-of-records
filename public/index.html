@@ -180,57 +180,35 @@
     // -------------------------
     // Filtered mapping (TikTok-style)
     // -------------------------
-    function buildFilteredRowsFromArrays(rawArrays, headerRowIndex, headers) {
-      // Use headers to find column indexes (case-insensitive)
-      const lowerHeaders = headers.map(h => String(h).toLowerCase());
-      const colIdxOrderID = lowerHeaders.findIndex(cell => cell.includes('order/adjustment id') || cell.includes('order id') || cell.includes('adjustment id'));
-      const colIdxTxType = lowerHeaders.findIndex(cell => cell.includes('transaction type'));
-      const colIdxSettle = lowerHeaders.findIndex(cell => cell.includes('settle amount'));
-      const colIdxRevenue = lowerHeaders.findIndex(cell => cell.includes('total revenue'));
-      const colIdxFees = lowerHeaders.findIndex(cell => cell.includes('total fees'));
-      const colIdxSettledTime = lowerHeaders.findIndex(cell => cell.includes('settled time') || cell.includes('order settled') || cell.includes('settled data'));
+    const filteredRows = dataArrays
+  .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
+  .map(row => {
+    const transactionType = String(row[idxB] || '').trim().toLowerCase();
+    const isWithholding = transactionType.includes('withholding');
 
-      // Fallbacks to standard TikTok columns (A=0, B=1, F=5, G=6, N=13)
-      const idxA = colIdxOrderID !== -1 ? colIdxOrderID : 0;
-      const idxB = colIdxTxType !== -1 ? colIdxTxType : 1;
-      const idxF = colIdxSettle !== -1 ? colIdxSettle : 5;
-      const idxG = colIdxRevenue !== -1 ? colIdxRevenue : 6;
-      const idxN = colIdxFees !== -1 ? colIdxFees : 13;
-      const idxSettledTime = colIdxSettledTime !== -1 ? colIdxSettledTime : 3;
+    let grossSales = safeNum(row[idxG]);
+    let cashVal = safeNum(row[idxF]);
+    let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
 
-      // Data rows are rows after headerRowIndex
-      const dataArrays = rawArrays.slice(headerRowIndex + 1);
-
-      const safeNum = v => {
-        if (v === undefined || v === null || v === '') return 0;
-        // Remove commas and spaces, handle parentheses for negatives
-        let s = String(v).trim();
-        const isParen = /^\(.*\)$/.test(s);
-        s = s.replace(/[,\s]/g, '').replace(/[()]/g, '');
-        const n = Number(s);
-        if (!Number.isFinite(n)) return 0;
-        return isParen ? -Math.abs(n) : n;
-      };
-
-      const filteredRows = dataArrays
-        .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
-        .map(row => {
-          const transactionType = String(row[idxB] || '').trim().toLowerCase();
-          const isWithholding = transactionType.includes('withholding');
-
-          return {
-            Order_ID: String(row[idxA] || 'N/A').trim(),
-            Sales_Invoice: '',
-            Gross_Sales: safeNum(row[idxG]),
-            Withholding_Tax: isWithholding ? safeNum(row[idxF]) : 0,
-            Total_Platform_Fee: safeNum(row[idxN]),
-            Cash: safeNum(row[idxF]),
-            Order_Settled_Time: formatDateTime(row[idxSettledTime]) || ''
-          };
-        });
-
-      return filteredRows;
+    // ✅ KEY LOGIC: MOVE NEGATIVE CASH → WITHHOLDING (KEEP SIGN)
+    if (cashVal < 0) {
+      withholdingVal += cashVal; // keep negative (e.g. -27.27)
+      cashVal = 0;
     }
+
+    return {
+      Order_ID: String(row[idxA] || 'N/A').trim(),
+      Sales_Invoice: '',
+      Gross_Sales: grossSales,
+      Withholding_Tax: withholdingVal,
+      Total_Platform_Fee: safeNum(row[idxN]),
+      Cash: cashVal,
+      Order_Settled_Time: formatDateTime(row[idxSettledTime]) || ''
+    };
+  });
+
+return filteredRows;
+
       //--------------------------
     //GROUPING
     //--------------------------
@@ -407,6 +385,8 @@ function renderParticularsView(groups) {
     const tbody = document.createElement('tbody');
 
     let totalGross = 0;
+    let totalCash = 0;
+    let totalWithholding = 0;
 
     // ✅ IMPORTANT: loop correctly
     (group.rows || []).forEach(r => {
@@ -419,6 +399,8 @@ function renderParticularsView(groups) {
       const withholding = Number(r.withholdingTax || 0);
       
       totalGross += gross;
+      totalCash += cash;
+      totalWithholding += withholding;
 
       tr.innerHTML = `
         <td>${orderId}</td>
@@ -435,7 +417,8 @@ function renderParticularsView(groups) {
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
       <td><strong>${totalGross}</strong></td>
-      <td></td>
+      <td><strong>${totalCash}</td>
+      <td style="color:red">${totalWithholding}</td>
     `;
     tbody.appendChild(totalRow);
 
