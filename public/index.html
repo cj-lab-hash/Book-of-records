@@ -501,10 +501,9 @@ function renderParticularsView(groups) {
       tr.innerHTML = `
         <td>${orderId}</td>
         <td>${formatNumber(gross)}</td>
-        <td>${formatNumber(cash)}</td>
         <td>${formatNumber(platform)}</td>
         <td style="color:red">${formatNumber(withholding)}</td>
-
+        <td>${formatNumber(cash)}</td>
       `;
 
       tbody.appendChild(tr);
