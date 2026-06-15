@@ -221,7 +221,17 @@
   };
 
   const filteredRows = dataArrays
-    .filter(row => row && row[idxA] !== undefined && String(row[idxA]).trim() !== '')
+    
+    .filter(row => {
+      if (!row || row[idxA] === undefined) return false;
+
+      const gross = safeNum(row[idxG]);
+      const cash = safeNum(row[idxF]);
+      const hasValue = gross !== 0 || cash !== 0;
+
+      return String(row[idxA]).trim() !== '' && hasValue;
+    })
+
     .map(row => {
 
       const transactionType = String(row[idxB] || '').trim().toLowerCase();
