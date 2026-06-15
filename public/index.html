@@ -231,6 +231,7 @@
   const colIdxSettledTime = lowerHeaders.findIndex(cell =>
     cell.includes('settled time') || cell.includes('order settled')
   );
+  
 
   const idxA = colIdxOrderID !== -1 ? colIdxOrderID : 0;
   const idxB = colIdxTxType !== -1 ? colIdxTxType : 1;
@@ -238,6 +239,7 @@
   const idxG = colIdxRevenue !== -1 ? colIdxRevenue : 6;
   const idxN = colIdxFees !== -1 ? colIdxFees : 13;
   const idxSettledTime = colIdxSettledTime !== -1 ? colIdxSettledTime : 3;
+  
 
   const dataArrays = rawArrays.slice(headerRowIndex + 1);
 
@@ -465,10 +467,10 @@ function renderParticularsView(groups) {
       <tr>
         <th>Order ID</th>
         <th>Gross Sales</th>
-        <th>Cash</th>
         <th>Total Platform Fee</th>
         <th>WithHolding Tax</th>
-        
+        <th>Cash</th>
+
       </tr>
     `;
     table.appendChild(thead);
@@ -514,13 +516,13 @@ function renderParticularsView(groups) {
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
       <td><strong>${totalGross.toFixed(2)}</strong></td>
+      <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
+      <td style="color:red"><strong>${totalWithholding.toFixed(2)}</strong></td>
       <td>
           <strong>${adjustedCash.toFixed(2)}</strong>
            <br>
            <small>(Cash: ${totalCash.toFixed(2)}, WHT: ${totalWithholding.toFixed(2)})</small>
-          </td>
-      <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
-      <td style="color:red"><strong>${totalWithholding.toFixed(2)}</strong></td>
+      </td>
     `;
     tbody.appendChild(totalRow);
 
