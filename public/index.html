@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Excel Viewer — Full + Filtered</title>
+  <title>Book of Records</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 16px; }
     .controls { margin: 12px 0; }
@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <h2>Excel Viewer — Full Sheet + Filtered TikTok View</h2>
+  <h2>Book of Records for JM Pretty</h2>
 
   <form id="uploadForm">
     <input type="file" name="excelFile" accept=".xlsx,.xls" required />
@@ -28,8 +28,8 @@
 
   <div class="controls">
     <button id="showRawBtn" class="btn" disabled>Show Full Sheet</button>
-    <button id="showFilteredBtn" class="btn" disabled>Show Filtered View</button>
-    <button id="showParticularsBtn" class="btn" disabled>Show Particulars View</button>
+    <button id="showFilteredBtn" class="btn" disabled>Book of Records</button>
+    <button id="showParticularsBtn" class="btn" disabled>Receipt</button>
   </div>
 
   <div id="rawContainer" style="display:none;">
@@ -39,13 +39,13 @@
   </div>
 
   <div id="filteredContainer" style="display:none;">
-    <h3>Filtered TikTok-style View</h3>
+    <h3>Filtered View</h3>
     <div id="filteredTableWrapper"></div>
     <div id="filteredSummary" class="summary"></div>
   </div>
   
   <div id="particularsContainer" style="display:none;">
-    <h3>Particulars View (Grouped)</h3>
+    <h3>Particulars View (Grouped by date)</h3>
     <div id="particularsTableWrapper"></div>
   </div>
 
