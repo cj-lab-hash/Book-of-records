@@ -29,6 +29,7 @@
   <div class="controls">
     <button id="showRawBtn" class="btn" disabled>Show Full Sheet</button>
     <button id="showFilteredBtn" class="btn" disabled>Show Filtered View</button>
+    <button id="showParticularsBtn" class="btn" disabled>Show Particulars View</button>
   </div>
 
   <div id="rawContainer" style="display:none;">
@@ -53,6 +54,8 @@
     const showFilteredBtn = document.getElementById('showFilteredBtn');
     const debug = document.getElementById('debug');
     const filteredSummary = document.getElementById('filteredSummary');
+    const showParticularsBtn = document.getElementById('showParticularsBtn');
+
 
     let lastRawArrays = null;
     let lastHeaderRowIndex = null;
@@ -65,6 +68,7 @@
       const fd = new FormData(uploadForm);
       showRawBtn.disabled = true;
       showFilteredBtn.disabled = true;
+      showParticularsBtn.disabled = false;
       rawTableWrapper.innerHTML = '<p class="loading">Loading full sheet...</p>';
       filteredTableWrapper.innerHTML = '<p class="loading">Loading filtered view...</p>';
       debug.innerHTML = '';
@@ -107,7 +111,7 @@
           return d2 - d1;
         });
 
-        // renderFilteredTable(lastFilteredRows);
+        renderFilteredTable(lastFilteredRows);
         const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
         renderParticularsView(grouped);
 
@@ -127,6 +131,10 @@
 
     showRawBtn.addEventListener('click', showRaw);
     showFilteredBtn.addEventListener('click', showFiltered);
+    
+    showParticularsBtn.addEventListener('click', () => {
+      renderParticularsView(groupByDateGrossLimit(lastFilteredRows, 500));
+    });
 
     function showRaw() {
       rawContainer.style.display = 'block';
@@ -418,10 +426,10 @@
 
       // Summary totals
       const totals = rows.reduce((acc, r) => {
-        acc.grossSales += Number(r.grossSales || 0);
-        acc.withholdingTax += Number(r.withholdingTax || 0);
-        acc.totalPlatformFee += Number(r.totalPlatformFee || 0);
-        acc.cash += Number(r.cash || 0);
+      acc.grossSales += Number(r.Gross_Sales || 0);
+      acc.withholdingTax += Number(r.Withholding_Tax || 0);
+      acc.totalPlatformFee += Number(r.Total_Platform_Fee || 0);
+      acc.cash += Number(r.Cash || 0);
         return acc;
       }, { grossSales: 0, withholdingTax: 0, totalPlatformFee: 0, cash: 0 });
 
@@ -482,7 +490,7 @@ function renderParticularsView(groups) {
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
       // const withholding = Number(r.Withholding_Tax || 0);
-      const platform = Number(r.totalPlatformFee || 0);
+      const platform = Number(r.Total_Platform_Fee || 0);
       
       totalGross += gross;
       totalCash += cash;
