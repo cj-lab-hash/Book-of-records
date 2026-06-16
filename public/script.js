@@ -1,5 +1,3 @@
-const { raw } = require("express");
-
 document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const rawTableWrapper = document.getElementById('rawTableWrapper');
