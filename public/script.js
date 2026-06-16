@@ -530,16 +530,28 @@ function renderParticularsView(groups) {
         Take Home Cash :${formatNumber(net)}
 
         `;
-        div.onclick = () => {
-          document.querySelectorAll('.date-summary-item')
-          .forEach(el => el.style.background = '');
-          div.style.background = '#d0ebff';
+        // div.onclick = () => {
+        //   document.querySelectorAll('.date-summary-item')
+        //   .forEach(el => el.style.background = '');
+        //   div.style.background = '#d0ebff';
 
-          const target = document.querySelector(`[data-date="${date}"]`);
-          if (target) {
-          target.scrollIntoView({ behavior: 'smooth' });
-            }
-          };
+        //   const target = document.querySelector(`[data-date="${date}"]`);
+        //   if (target) {
+        //   target.scrollIntoView({ behavior: 'smooth' });
+        //     }
+        //   };
+          div.onclick = () => {
+
+            document.querySelector('.active-summary')?.classList.remove('active-summary');
+            div.classList.add('active-summary');
+
+              const target = document.querySelector(`[data-date-anchor="${date}"]`);
+              if (target) {
+                setTimeout(() => {
+                  target.scrollIntoView({ behavior: 'smooth' });
+                }, 0);
+              }
+            };
         container.appendChild(div);
         });
       }
