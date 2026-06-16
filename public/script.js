@@ -657,8 +657,8 @@ function renderParticularsView(groups) {
         active.style.fontWeight = 'bold';
       
         active.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth'
+        block: 'nearest'
+        
         });
 
     }
