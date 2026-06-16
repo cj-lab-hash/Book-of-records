@@ -406,16 +406,16 @@ function renderParticularsView(groups) {
     wrapper.style.marginBottom = '20px';
 
     // ✅ FIXED date display
-    const totalCash = dateTotals[group.date].cash;
+    const dateTotalCash = dateTotals[group.date].cash;
     const totalWHT = dateTotals[group.date].withholding;
-    const netCash = totalCash + totalWHT;
+    const netCash = dateTotalCash + totalWHT;
 
     const title = document.createElement('h4');
             title.className = 'date-hover';
             title.innerHTML = `
             Date: ${group.date} | Group ${index + 1}
             <div class="tooltip">
-                Total Cash: ${formatNumber(totalCash)}<br>
+                Total Cash: ${formatNumber(dateTotalCash)}<br>
                 Withholding: ${formatNumber(totalWHT)}<br>
                 Net Cash: ${formatNumber(netCash)}
             </div>
