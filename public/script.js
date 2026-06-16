@@ -558,14 +558,19 @@ function renderParticularsView(groups) {
         groups.forEach(group => {
             if (!dateTotals[group.date]) {
             dateTotals[group.date] = {
+                gross:0,
                 cash: 0,
-                withholding: 0
+                withholding: 0,
+                totalPlatformFee: 0
+
             };
             }
 
             group.rows.forEach(r => {
+            dateTotals[group.date].gross +=Number(r.Gross_Sales || 0);
             dateTotals[group.date].cash += Number(r.Cash || 0);
             dateTotals[group.date].withholding += Number(r.Withholding_Tax || 0);
+            dateTotals[group.date].totalPlatformFee += Number(r.Total_Platform_Fee || 0);
             });
         });
 
