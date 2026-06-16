@@ -507,7 +507,7 @@ function renderParticularsView(groups) {
   Object.keys(totals).forEach(date => {
     const cash = totals[date].cash;
     const wht = totals[date].withholding;
-    const net = cash + wht;
+    // const net = cash + wht;
 
     const div = document.createElement('div');
     div.className = 'date-summary-item';
@@ -516,7 +516,7 @@ function renderParticularsView(groups) {
       <strong>${date}</strong>
       Cash: ${formatNumber(cash)}<br>
       <span class="wht">WHT: ${formatNumber(wht)}</span><br>
-      Net: ${formatNumber(net)}
+      // Net: ${formatNumber(net)}
     `;
 
     container.appendChild(div);
