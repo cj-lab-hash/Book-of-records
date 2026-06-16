@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
       renderParticularsView(grouped);
       renderDateSummary(grouped);
-
+    
+      window.addEventListener('scroll', syncSummaryWithScroll);
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'none';
       particularsContainer.style.display = 'block';
@@ -412,6 +413,7 @@ function renderParticularsView(groups) {
     const netCash = dateTotalCash + totalWHT;
 
     const title = document.createElement('h4');
+            title.setAttribute('date-date', group.date);
             title.className = 'date-hover';
             title.innerHTML = `
             Date: ${group.date} | Group ${index + 1}
@@ -509,7 +511,7 @@ function renderParticularsView(groups) {
 
     const div = document.createElement('div');
     div.className = 'date-summary-item';
-
+    div.setAttribute('date-date-summary', date);
     div.innerHTML = `
       <strong>${date}</strong>
       Cash: ${formatNumber(cash)}<br>
@@ -556,6 +558,40 @@ function renderParticularsView(groups) {
 
         return dateTotals;
         }
+    function syncSummaryWithScroll() {
+    const dateHeaders = document.querySelectorAll('[data-date]');
+    const summaryItems = document.querySelectorAll('[data-date-summary]');
 
-  
+    let currentDate = null;
+
+    dateHeaders.forEach(header => {
+    const rect = header.getBoundingClientRect();
+
+    if (rect.top <= 150) {
+      currentDate = header.getAttribute('data-date');
+        }
+    });
+
+    summaryItems.forEach(item => {
+    item.style.background = '';
+    item.style.fontWeight = '';
+  });
+
+    if (currentDate) {
+    const active = document.querySelector(
+      `[data-date-summary="${currentDate}"]`
+    );
+
+    if (active) {
+        active.style.background = '#e9f5ff';
+        active.style.fontWeight = 'bold';
+      
+        active.scrollIntoView({
+        block: 'nearest'
+        });
+
+    }
+  }
+}
+//   window.addEventListener('scroll', syncSummaryWithScroll);
     });
