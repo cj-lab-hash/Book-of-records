@@ -417,9 +417,11 @@ function renderParticularsView(groups) {
     wrapper.style.marginBottom = '20px';
 
     // ✅ FIXED date display
-    const dateTotalCash = dateTotals[group.date].cash;
+    const dateTotalGross = dateTotals[group.date].gross;
     const totalWHT = dateTotals[group.date].withholding;
-    const netCash = dateTotalCash + totalWHT;
+    const totalFee = dateTotals[group.date].totalPlatformFee
+    const totalCash = dateTotals[group.date].cash
+    const netCash = totalCash + totalWHT;
 
     const title = document.createElement('h4');
             title.setAttribute('data-date', group.date);
@@ -427,8 +429,9 @@ function renderParticularsView(groups) {
             title.innerHTML = `
             Date: ${group.date} | Group ${index + 1}
             <div class="tooltip">
-                Total Cash: ${formatNumber(dateTotalCash)}<br>
+                Total Cash: ${formatNumber(dateTotalGross)}<br>
                 Withholding: ${formatNumber(totalWHT)}<br>
+                Total Platform Fee: ${formatNumber(totalFee)}<br>
                 Net Cash: ${formatNumber(netCash)}
             </div>
             `;
