@@ -1,3 +1,5 @@
+const { raw } = require("express");
+
 document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const rawTableWrapper = document.getElementById('rawTableWrapper');
@@ -223,15 +225,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let grossSales = safeNum(row[idxG]);
       let cashVal = safeNum(row[idxF]);
-      let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
+      // let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
+      let rawCash = safeNum(row[idxF]);
 
+      let cashVal = 0;
+      let withholdingVal = 0;
       // ✅ Move negative cash → withholding
-      if (cashVal < 0) {
-        withholdingVal += cashVal;
-        cashVal = 0;
+      if (isWithholding) {
+
+        withholdingVal = rawCash;
+      } else {
+        cashVal = rawCash;
       }
 
       return {
+        console.log({
+          type:transactionType,
+          rawCash,
+          cashVal,
+          withholdingVal
+        });
         Order_ID: String(row[idxA] || 'N/A').trim(),
         Gross_Sales: grossSales,
         Withholding_Tax: withholdingVal,
