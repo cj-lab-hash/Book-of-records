@@ -7,7 +7,7 @@
     body { 
       font-family: Arial, sans-serif; 
       padding: 16px; 
-      margin-right:240px;
+      /*margin-right:240px; */
     }
     .controls { margin: 12px 0; }
     .btn { padding: 6px 10px; margin-right: 6px; cursor: pointer; }
@@ -73,6 +73,18 @@
 .date-summary-item .wht {
   color: red;
 }
+#mainLayout {
+  display:flex;
+}
+#contentAread {
+  flex:1;
+}
+#dateSummaryPanel {
+  width: 220px;
+  margin-left:10px;
+  position:sticky;
+  top:10px;
+}
   </style>
 </head>
 <body>
@@ -89,6 +101,7 @@
     <button id="showParticularsBtn" class="btn" disabled>Receipt</button>
   </div>
 
+  <div id="mainLayout">
   <div id="rawContainer" style="display:none;">
     <h3>Full Sheet (every row and column)</h3>
     <div id="rawTableWrapper"></div>
@@ -109,6 +122,7 @@
   <div id="dateSummaryPanel">
     <h3>Date Summary</h3>
     <div id="dateSummaryContent"></div>
+  </div>
   </div>
 <script src="script.js"></script>
 </body>
