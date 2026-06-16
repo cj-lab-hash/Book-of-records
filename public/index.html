@@ -42,19 +42,7 @@
 .date-hover:hover .tooltip {
   display: block;
 }
-#dateSummaryPanel {
-  position: fixed;
-  right: 10px;
-  top: 100px;
-  width: 220px;
-  max-height: 70vh;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  background: #fff;
-  padding: 10px;
-  font-size: 13px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
+
 
 #dateSummaryPanel h3 {
   margin-top: 0;
@@ -76,15 +64,18 @@
 #mainLayout {
   display:flex;
 }
-#contentAread {
+#contentArea {
   flex:1;
 }
+
 #dateSummaryPanel {
   width: 220px;
-  margin-left:10px;
-  position:sticky;
-  top:10px;
+  margin-left: 16px;
+  position: sticky;
+  top: 10px;
+  height: fit-content;
 }
+
   </style>
 </head>
 <body>
