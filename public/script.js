@@ -415,8 +415,8 @@ function renderParticularsView(groups) {
     const dateTotalGross = dateTotals[group.date].gross;
     const totalWHT = dateTotals[group.date].withholding;
     const totalFee = dateTotals[group.date].totalPlatformFee
-    const totalCash = dateTotals[group.date].cash
-    const netCash = totalCash + totalWHT;
+    const totalSettled = dateTotals[group.date].cash
+    const netCash = totalSettled + totalWHT;
 
     const title = document.createElement('h4');
             title.setAttribute('data-date', group.date);
@@ -427,7 +427,7 @@ function renderParticularsView(groups) {
                 Total Cash: ${formatNumber(dateTotalGross)}<br>
                 Withholding: ${formatNumber(totalWHT)}<br>
                 Total Platform Fee: ${formatNumber(totalFee)}<br>
-                Net Cash: ${formatNumber(netCash)}
+                Take Home Cash: ${formatNumber(netCash)}
             </div>
             `;
 
@@ -527,14 +527,14 @@ function renderParticularsView(groups) {
         Gross Sale: ${formatNumber(gross)}<br>
         <span class="wht">Withholding Tax: ${formatNumber(wht)}</span><br>
         PlatformFee: ${formatNumber(fee)}<br>
-        Cash :${formatNumber(net)}
+        Take Home Cash :${formatNumber(net)}
 
         `;
         div.onclick = () => {
           document.querySelectorAll('.date-summary-item')
           .forEach(el => el.style.background = '');
           div.style.background = '#d0ebff';
-          
+
           const target = document.querySelector(`[data-date="${date}"]`);
           if (target) {
           target.scrollIntoView({ behavior: 'smooth' });
