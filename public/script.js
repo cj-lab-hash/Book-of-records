@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
 function renderParticularsView(groups) {
   // const container = document.getElementById('filteredTableWrapper');
+  const dateTotals = computeDateTotals(groups);
   const container = particularsTableWrapper;
   container.innerHTML = '';
   
@@ -405,8 +406,22 @@ function renderParticularsView(groups) {
     wrapper.style.marginBottom = '20px';
 
     // ✅ FIXED date display
+    const totalCash = dateTotals[group.date].cash;
+    const totalWHT = dateTotals[group.date].withholding;
+    const netCash = totalCash + totalWHT;
+
     const title = document.createElement('h4');
-    title.textContent = `Date: ${group.date} | Group ${index + 1}`;
+            title.className = 'date-hover';
+            title.innerHTML = `
+            Date: ${group.date} | Group ${index + 1}
+            <div class="tooltip">
+                Total Cash: ${formatNumber(totalCash)}<br>
+                Withholding: ${formatNumber(totalWHT)}<br>
+                Net Cash: ${formatNumber(netCash)}
+            </div>
+            `;
+
+
     wrapper.appendChild(title);
 
     const table = document.createElement('table');
@@ -497,5 +512,25 @@ function renderParticularsView(groups) {
       if (isNaN(d)) return v;
       return d.toLocaleDateString();
     }
+    function computeDateTotals(groups) {
+        const dateTotals = {};
+
+        groups.forEach(group => {
+            if (!dateTotals[group.date]) {
+            dateTotals[group.date] = {
+                cash: 0,
+                withholding: 0
+            };
+            }
+
+            group.rows.forEach(r => {
+            dateTotals[group.date].cash += Number(r.Cash || 0);
+            dateTotals[group.date].withholding += Number(r.Withholding_Tax || 0);
+            });
+        });
+
+        return dateTotals;
+        }
+
   
     });

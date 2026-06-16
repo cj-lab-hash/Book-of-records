@@ -16,6 +16,29 @@
     .highlight-header { background: #e9f5ff; }
     .summary { margin-top: 8px; font-size: 13px; color: #333; }
     pre.debug { background:#f7f7f7; padding:8px; border:1px solid #eee; overflow:auto; }
+    .date-hover {
+  position: relative;
+  cursor: pointer;
+}
+
+.date-hover .tooltip {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 20px;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.date-hover:hover .tooltip {
+  display: block;
+}
+
   </style>
 </head>
 <body>
