@@ -656,13 +656,18 @@ function renderParticularsView(groups) {
         active.style.background = '#e9f5ff';
         active.style.fontWeight = 'bold';
       
-        active.scrollIntoView({
-        block: 'nearest'
-        
+        const panel = document.getElementById('dateSummaryPanel');
+        const rect = active.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+        if (rect.top < panelRect.top || rect.bottom > panelRect.bottom) {
+          active.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth' 
         });
-
+      }
     }
   }
 }
+    
 //   window.addEventListener('scroll', syncSummaryWithScroll);
     });
