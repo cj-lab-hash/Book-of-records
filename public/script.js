@@ -101,7 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderParticularsView(grouped);
       renderDateSummary(grouped);
     
+      window.removeEventListener('scroll', syncSummaryWithScroll);
       window.addEventListener('scroll', syncSummaryWithScroll);
+      
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'none';
       particularsContainer.style.display = 'block';
