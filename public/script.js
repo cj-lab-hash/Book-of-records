@@ -237,14 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         cashVal = rawCash;
       }
-
-      return {
-        console.log({
+      console.log({
           type:transactionType,
           rawCash,
           cashVal,
           withholdingVal
         });
+      return {
         Order_ID: String(row[idxA] || 'N/A').trim(),
         Gross_Sales: grossSales,
         Withholding_Tax: withholdingVal,
@@ -426,7 +425,7 @@ function renderParticularsView(groups) {
     const netCash = dateTotalCash + totalWHT;
 
     const title = document.createElement('h4');
-            title.setAttribute('date-date', group.date);
+            title.setAttribute('data-date', group.date);
             title.className = 'date-hover';
             title.innerHTML = `
             Date: ${group.date} | Group ${index + 1}
@@ -524,7 +523,7 @@ function renderParticularsView(groups) {
 
     const div = document.createElement('div');
     div.className = 'date-summary-item';
-    div.setAttribute('date-date-summary', date);
+    div.setAttribute('data-date-summary', date);
     div.innerHTML = `
       <strong>${date}</strong>
       Cash: ${formatNumber(cash)}<br>
