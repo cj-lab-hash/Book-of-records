@@ -234,12 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         cashVal = rawCash;
       }
-      console.log({
-          type:transactionType,
-          rawCash,
-          cashVal,
-          withholdingVal
-        });
+      
       return {
         Order_ID: String(row[idxA] || 'N/A').trim(),
         Gross_Sales: grossSales,
@@ -535,8 +530,18 @@ function renderParticularsView(groups) {
         Cash :${formatNumber(net)}
 
         `;
+        div.onclick = () => {
+          document.querySelectorAll('.date-summary-item')
+          .forEach(el => el.style.background = '');
+          div.style.background = '#d0ebff';
+          
+          const target = document.querySelector(`[data-date="${date}"]`);
+          if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+            }
+          };
         container.appendChild(div);
-      });
+        });
       }
   
     // -------------------------
@@ -608,7 +613,8 @@ function renderParticularsView(groups) {
         active.style.fontWeight = 'bold';
       
         active.scrollIntoView({
-        block: 'nearest'
+        block: 'nearest',
+        behavior: 'smooth'
         });
 
     }
