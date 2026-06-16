@@ -526,10 +526,9 @@ function renderParticularsView(groups) {
 
         div.innerHTML = `
         <strong>${date}</strong>
-        Gross: ${formatNumber(gross)}<br>
-        <span class="wht">TAX: ${formatNumber(wht)}</span><br>
-        Fee: ${formatNumber(fee)}<br>
-        // Cash: ${formatNumber(cash)}
+        Gross Sale: ${formatNumber(gross)}<br>
+        <span class="wht">Withholding Tax: ${formatNumber(wht)}</span><br>
+        PlatformFee: ${formatNumber(fee)}<br>
         Cash :${formatNumber(net)}
 
         `;
