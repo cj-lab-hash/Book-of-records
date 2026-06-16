@@ -101,9 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderParticularsView(grouped);
       renderDateSummary(grouped);
     
-      window.removeEventListener('scroll', syncSummaryWithScroll);
       window.addEventListener('scroll', syncSummaryWithScroll);
-      
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'none';
       particularsContainer.style.display = 'block';
@@ -399,80 +397,43 @@ document.addEventListener('DOMContentLoaded', () => {
     //-----------------------------
     
 function renderParticularsView(groups) {
-
+  // const container = document.getElementById('filteredTableWrapper');
   const dateTotals = computeDateTotals(groups);
   const container = particularsTableWrapper;
   container.innerHTML = '';
-
-  if (!groups || groups.length === 0) {
-    container.innerHTML = "<p>No grouped data found.</p>";
+  
+    if (!groups || groups.length === 0) {
+      container.innerHTML = "<p>No grouped data found.</p>";
     return;
-  }
-
-  let currentDate = null;
-  let dateWrapper = null;
-
+    }
   groups.forEach((group, index) => {
 
-    // ✅ NEW DATE GROUP
-    if (group.date !== currentDate) {
-      currentDate = group.date;
-
-      dateWrapper = document.createElement('div');
-      dateWrapper.className = 'date-group';
-
-      const dateHeader = document.createElement('h3');
-      dateHeader.textContent = `Date: ${group.date}`;
-      dateHeader.style.cursor = 'pointer';
-
-      dateHeader.onclick = () => {
-        document.querySelectorAll('.date-group-content')
-          .forEach(el => el.style.display = 'none');
-
-        const content = dateWrapper.querySelector('.date-group-content');
-        content.style.display = 'block';
-      };
-
-      dateWrapper.appendChild(dateHeader);
-
-      const content = document.createElement('div');
-      content.className = 'date-group-content';
-      content.style.display = 'none'; // ✅ FIXED
-
-      dateWrapper.appendChild(content);
-      container.appendChild(dateWrapper);
-    }
-
-    // ✅ CREATE GROUP WRAPPER
     const wrapper = document.createElement('div');
     wrapper.style.marginBottom = '20px';
 
-    const content = dateWrapper.querySelector('.date-group-content');
-
-    // ✅ DATE TOTALS TOOLTIP
+    // ✅ FIXED date display
     const dateTotalGross = dateTotals[group.date].gross;
     const totalWHT = dateTotals[group.date].withholding;
-    const totalFee = dateTotals[group.date].totalPlatformFee;
-    const totalSettled = dateTotals[group.date].cash;
+    const totalFee = dateTotals[group.date].totalPlatformFee
+    const totalSettled = dateTotals[group.date].cash
     const netCash = totalSettled + totalWHT;
 
     const title = document.createElement('h4');
-    title.setAttribute('data-date', group.date);
-    title.className = 'date-hover';
+            title.setAttribute('data-date', group.date);
+            title.className = 'date-hover';
+            title.innerHTML = `
+            Date: ${group.date} | Group ${index + 1}
+            <div class="tooltip">
+                Total Cash: ${formatNumber(dateTotalGross)}<br>
+                Withholding: ${formatNumber(totalWHT)}<br>
+                Total Platform Fee: ${formatNumber(totalFee)}<br>
+                Take Home Cash: ${formatNumber(netCash)}
+            </div>
+            `;
 
-    title.innerHTML = `
-      Date: ${group.date} | Group ${index + 1}
-      <div class="tooltip">
-        Total Gross: ${formatNumber(dateTotalGross)}<br>
-        Withholding: ${formatNumber(totalWHT)}<br>
-        Fee: ${formatNumber(totalFee)}<br>
-        Net Cash: ${formatNumber(netCash)}
-      </div>
-    `;
 
     wrapper.appendChild(title);
 
-    // ✅ CREATE TABLE
     const table = document.createElement('table');
 
     const thead = document.createElement('thead');
@@ -483,6 +444,7 @@ function renderParticularsView(groups) {
         <th>Total Platform Fee</th>
         <th>WithHolding Tax</th>
         <th>Cash</th>
+
       </tr>
     `;
     table.appendChild(thead);
@@ -494,62 +456,54 @@ function renderParticularsView(groups) {
     let totalWithholding = 0;
     let totalPlatformFee = 0;
 
+    // ✅ IMPORTANT: loop correctly
     (group.rows || []).forEach(r => {
 
+      const tr = document.createElement('tr');
+
+      const orderId = r.Order_ID || '';
       const gross = Number(r.Gross_Sales || 0);
       const cash = Number(r.Cash || 0);
       const withholding = Number(r.Withholding_Tax || 0);
       const platform = Number(r.Total_Platform_Fee || 0);
-
+      
       totalGross += gross;
       totalCash += cash;
       totalWithholding += withholding;
       totalPlatformFee += platform;
 
-      const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${r.Order_ID || ''}</td>
+        <td>${orderId}</td>
         <td>${formatNumber(gross)}</td>
         <td>${formatNumber(platform)}</td>
         <td style="color:red">${formatNumber(withholding)}</td>
         <td>${formatNumber(cash)}</td>
       `;
+
       tbody.appendChild(tr);
     });
 
     // ✅ TOTAL ROW
-    const adjustedCash = totalCash + totalWithholding;
-
     const totalRow = document.createElement('tr');
+    const adjustedCash = totalCash + totalWithholding;
     totalRow.innerHTML = `
       <td><strong>Total</strong></td>
       <td><strong>${totalGross.toFixed(2)}</strong></td>
       <td><strong>${totalPlatformFee.toFixed(2)}</strong></td>
       <td style="color:red"><strong>${totalWithholding.toFixed(2)}</strong></td>
       <td>
-        <strong>${adjustedCash.toFixed(2)}</strong><br>
-        <small>(Cash: ${totalCash.toFixed(2)}, WHT: ${totalWithholding.toFixed(2)})</small>
+          <strong>${adjustedCash.toFixed(2)}</strong>
+           <br>
+           <small>(Cash: ${totalCash.toFixed(2)}, WHT: ${totalWithholding.toFixed(2)})</small>
       </td>
     `;
     tbody.appendChild(totalRow);
 
     table.appendChild(tbody);
-
-    // ✅ WRAP TABLE FOR MOBILE SCROLL
-    const tableWrapper = document.createElement('div');
-    tableWrapper.className = 'table-wrapper';
-    tableWrapper.appendChild(table);
-
-    wrapper.appendChild(tableWrapper);
-
-    // ✅ APPEND TO DATE CONTENT
-    content.appendChild(wrapper);
-  });
-
-  // ✅ auto open first date
-  const first = document.querySelector('.date-group-content');
-  if (first) first.style.display = 'block';
-}
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+        });
+    }
 
     function renderDateSummary(groups) {
       const container = document.getElementById('dateSummaryContent');
@@ -658,18 +612,13 @@ function renderParticularsView(groups) {
         active.style.background = '#e9f5ff';
         active.style.fontWeight = 'bold';
       
-        const panel = document.getElementById('dateSummaryPanel');
-        const rect = active.getBoundingClientRect();
-        const panelRect = panel.getBoundingClientRect();
-        if (rect.top < panelRect.top || rect.bottom > panelRect.bottom) {
-          active.scrollIntoView({
+        active.scrollIntoView({
         block: 'nearest',
-        behavior: 'smooth' 
+        behavior: 'smooth'
         });
-      }
+
     }
   }
 }
-    
 //   window.addEventListener('scroll', syncSummaryWithScroll);
     });
