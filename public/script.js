@@ -508,29 +508,41 @@ function renderParticularsView(groups) {
     }
 
     function renderDateSummary(groups) {
-  const container = document.getElementById('dateSummaryContent');
-  container.innerHTML = '';
+      const container = document.getElementById('dateSummaryContent');
+      container.innerHTML = '';
 
-  const totals = computeDateTotals(groups);
+      const totals = computeDateTotals(groups);
 
-  Object.keys(totals).forEach(date => {
-    const cash = totals[date].cash;
-    const wht = totals[date].withholding;
-    const net = cash + wht;
+      Object.keys(totals).forEach(date => {
+        // const cash = totals[date].cash;
+        // const wht = totals[date].withholding;
+        // const net = cash + wht;
+        const gross = totals[date].gross;
+        const wht = totals[date].withholding;
+        const fee = totals[date].totalPlatformFee;
+        const cash = totals[date].cash;
 
-    const div = document.createElement('div');
-    div.className = 'date-summary-item';
-    div.setAttribute('data-date-summary', date);
-    div.innerHTML = `
-      <strong>${date}</strong>
-      Gross: ${formatNumber(cash)}<br>
-      <span class="wht">WHT: ${formatNumber(wht)}</span><br>
-       Cash: ${formatNumber(net)}
-    `;
+        const div = document.createElement('div');
+        div.className = 'date-summary-item';
+        div.setAttribute('data-date-summary', date);
+        // div.innerHTML = `
+        //   <strong>${date}</strong>
+        //   Gross: ${formatNumber(cash)}<br>
+        //   <span class="wht">WHT: ${formatNumber(wht)}</span><br>
+        //    Cash: ${formatNumber(net)}
+        // `;
 
-    container.appendChild(div);
-  });
-}
+        div.innerHTML = `
+        <strong>${date}</strong>
+        Gross: ${formatNumber(gross)}<br>
+        <span class="wht">TAX: ${formatNumber(wht)}</span><br>
+        Fee: ${formatNumber(fee)}<br>
+        Cash: ${formatNumber(cash)}
+        
+        `;
+        container.appendChild(div);
+      });
+      }
   
     // -------------------------
     // Helpers
