@@ -514,18 +514,18 @@ function renderParticularsView(groups) {
   const totals = computeDateTotals(groups);
 
   Object.keys(totals).forEach(date => {
-    const cash = totals[date].cash;
+    const gross = totals[date].cash;
     const wht = totals[date].withholding;
-    const net = cash + wht;
+    const cash = cash + wht;
 
     const div = document.createElement('div');
     div.className = 'date-summary-item';
     div.setAttribute('data-date-summary', date);
     div.innerHTML = `
       <strong>${date}</strong>
-      Cash: ${formatNumber(cash)}<br>
+      Gross: ${formatNumber(gross)}<br>
       <span class="wht">WHT: ${formatNumber(wht)}</span><br>
-       Net: ${formatNumber(net)}
+       Cash: ${formatNumber(cash)}
     `;
 
     container.appendChild(div);
