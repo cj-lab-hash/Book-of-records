@@ -224,13 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const isWithholding = transactionType.includes('withholding');
 
       let grossSales = safeNum(row[idxG]);
-      let cashVal = safeNum(row[idxF]);
+      // let cashVal = safeNum(row[idxF]);
       // let withholdingVal = isWithholding ? safeNum(row[idxF]) : 0;
       let rawCash = safeNum(row[idxF]);
 
       let cashVal = 0;
       let withholdingVal = 0;
-      // ✅ Move negative cash → withholding
       if (isWithholding) {
 
         withholdingVal = rawCash;
