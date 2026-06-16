@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!lastFilteredRows) return;
       const grouped = groupByDateGrossLimit(lastFilteredRows, 500);
       renderParticularsView(grouped);
+      renderDateSummary(grouped);
 
       rawContainer.style.display = 'none';
       filteredContainer.style.display = 'none';
@@ -492,9 +493,33 @@ function renderParticularsView(groups) {
     table.appendChild(tbody);
     wrapper.appendChild(table);
     container.appendChild(wrapper);
+        });
+    }
+
+    function renderDateSummary(groups) {
+  const container = document.getElementById('dateSummaryContent');
+  container.innerHTML = '';
+
+  const totals = computeDateTotals(groups);
+
+  Object.keys(totals).forEach(date => {
+    const cash = totals[date].cash;
+    const wht = totals[date].withholding;
+    const net = cash + wht;
+
+    const div = document.createElement('div');
+    div.className = 'date-summary-item';
+
+    div.innerHTML = `
+      <strong>${date}</strong>
+      Cash: ${formatNumber(cash)}<br>
+      <span class="wht">WHT: ${formatNumber(wht)}</span><br>
+      Net: ${formatNumber(net)}
+    `;
+
+    container.appendChild(div);
   });
 }
-
   
     // -------------------------
     // Helpers
